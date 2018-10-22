@@ -15,6 +15,13 @@ Having followed a similar path to [aquacrazed's](https://www.nano-reef.com/forum
 
 - Total: ~£120
 
+Could have saved money with:
+- a cheaper power supply. 60w would have been enough.
+- cheaper decoder. There are bare board ones around £10
+- used an existing PC
+- had all the LEDs at one power rating
+- might be possible for ~£60
+
 ## Software
 - Ubuntu
 - [OLA](https://www.openlighting.org/ola/) python libraries
@@ -60,7 +67,7 @@ Having followed a similar path to [aquacrazed's](https://www.nano-reef.com/forum
 
 ## Hardware setup
 - I installed ubuntu 16.04.5 LTS as the operating system
-- Installed OLA from [github](https://github.com/OpenLightingProject/ola) including python modules (requires some IT knowledge)
+- Installed [OLA from github](https://github.com/OpenLightingProject/ola) including python modules (requires some IT knowledge)
 - Plug USB DMX interface into USB socket on server
 - Plug interface into DMX Decoder
 - ```lsusb``` in my case calls Lixada unit ```Van Ooijen Technische Informatica shared ID for use with libusb``` for some reason
@@ -68,12 +75,12 @@ Having followed a similar path to [aquacrazed's](https://www.nano-reef.com/forum
 ## OLA Configuring universe
 - ```ola_dev_info``` should show devices list. Note device number of your unit. Mine shows as:```Device 8: Anyma USB Device
   port 0, OUT```
-- To *patch* universe 1 to this device: ```ola_patch --patch --device DEVID --port 0 --universe 1``` replacing DEVID with the device number above, 8 in my case
+- To patch universe 1 to this device: ```ola_patch --patch --device DEVID --port 0 --universe 1``` replacing DEVID with the device number above, 8 in my case
 
 ## Installing my code
 - copy all files somewhere permanent belonging to your user. I used /home/ian/bin/
 - change User and Group lines in fishlights.service to match your user and group
-- change path to files in WorkingDirectory and ExecStart lines in fishlights.service to match where you put it
+- change path to files in WorkingDirectory and ExecStart lines in fishlights.service to match where you put the files
 - copy fishlights.service to /etc/systemd/system/ (requires root permission and/or use of sudo)
 - get systemd to reload the new config ```systemctl daemon-reload``` as root or using sudo
 
