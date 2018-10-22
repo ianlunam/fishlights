@@ -20,6 +20,7 @@ Could have saved money with:
 - cheaper decoder. There are bare board ones around £10
 - used an existing PC
 - had all the LEDs at one power rating
+
 might be possible for ~£60
 
 ## Software
