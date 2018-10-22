@@ -1,0 +1,16 @@
+[Unit]
+Description=Simplified python service
+After=syslog.target
+
+[Service]
+Type=simple
+Restart=always
+User=ian
+Group=ian
+WorkingDirectory=/home/ian/bin/
+ExecStart=/home/ian/bin/fishtimer.py
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
