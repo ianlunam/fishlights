@@ -13,14 +13,14 @@ Having followed a similar path to [aquacrazed's](https://www.nano-reef.com/forum
 - 2.1x5.5mm Y Cable Female to Male x 2 (£4.41 - Amazon) because running 2 pairs of strips
 - 24v-12v Stepdown converter (£14 - Amazon) because the old lights are 12v and the new are 24v.
 
-- Total: ~£120
+Total: ~£120
 
 Could have saved money with:
 - a cheaper power supply. 60w would have been enough.
 - cheaper decoder. There are bare board ones around £10
 - used an existing PC
 - had all the LEDs at one power rating
-- might be possible for ~£60
+might be possible for ~£60
 
 ## Software
 - Ubuntu
@@ -65,7 +65,12 @@ Could have saved money with:
 - female pigtail connected to stepdown converter input (using 2 sections of block connector)
 - male pigtail connected to stepdown converter output (using 2 sections of block connector)
 
-## Hardware setup
+## Plug it all together
+- Plug the power supply into the female pigtail
+- Plug the Y connecters into CH1's and CH2's pigtails, and the pairs of 24v LEDs into those (I used CH1 for white and CH2 for blue)
+- Plug the stepdown converter to CH3's pigtail and connect the 12v LEDs to that
+
+## Computer setup
 - I installed ubuntu 16.04.5 LTS as the operating system
 - Installed [OLA from github](https://github.com/OpenLightingProject/ola) including python modules (requires some IT knowledge)
 - Plug USB DMX interface into USB socket on server
