@@ -1,0 +1,2 @@
+5 0 * * sat cp /home/ian/bin/schedule.conf.weekend /home/ian/bin/schedule.conf
+5 0 * * mon cp /home/ian/bin/schedule.conf.weekday /home/ian/bin/schedule.conf
