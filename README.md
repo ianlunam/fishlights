@@ -26,19 +26,17 @@ might be possible for ~£60
 ## Software
 - Ubuntu
 - [OLA](https://www.openlighting.org/ola/) python libraries
-- Some code knicked from [stackoverflow](https://stackoverflow.com/a/13151299) for threading
 
 ## Files
 - fishlights.service - systemd daemon startup script
 - fishtimer.py - the code that does the work
-- repeatedtimer.py - code from stackoverflow with extra methods for data control
 - schedule.conf - json format schedule information
-- pickle.data - data store for last known state for recovery
+- pickle.data - data store for last known state for recovery (created on the fly)
 
 ## Threads
-- data sender - sends data to DMX units every SEND_INTERVAL seconds (default: 0.25)
-- data saver - saves current state in pickle file every SAVE_INTERVAL seconds (default: 5)
-- main thread - calculates what current state should be every CALC_INTERVAL seconds (default: 1)
+- data sender - sends data to DMX units every SEND_INTERVAL milliseconds (default: 250)
+- calculate - calculates what current state should be every CALC_INTERVAL milliseconds (default: 1000)
+- receive data - saves current state in pickle file every SAVE_EVERY received packets (to get around failed sends)
 
 ## Features
 - doesn't allow changes faster than 1 step per CALC_INTERVAL seconds
@@ -53,7 +51,7 @@ might be possible for ~£60
 ..* determines what value should be now
 ..* ensures value between DMX_MIN_SLOT_VALUE and DMX_MAX_SLOT_VALUE
 ..* ensures value no more than current + or - 1
-- updates data sender
+- updates data for sender
 
 ## Joylit unit wiring
 - female pigtail connected to INPUT V- (black) and V+ (red) for power supply

@@ -1,58 +1,58 @@
 #!/usr/bin/python
 from __future__ import division
-from repeatedtimer import RepeatedTimer
 from time import sleep
 
 from array import array
 from ola.ClientWrapper import ClientWrapper
-from ola.DMXConstants import DMX_MIN_SLOT_VALUE, DMX_MAX_SLOT_VALUE
+from ola.DMXConstants import DMX_MIN_SLOT_VALUE, DMX_MAX_SLOT_VALUE, \
+                             DMX_UNIVERSE_SIZE
 
 import sys, pickle, json, os, datetime
 
-SEND_INTERVAL = 0.25
-SAVE_INTERVAL = 5
-CALC_INTERVAL = 1
+SEND_INTERVAL = 250
+SAVE_EVERY = 20
+LAST_COUNT = 0
+CALC_INTERVAL = 1000
 UNIVERSE = 1
 DATASTORE = "pickle.data"
 SCHEDULE = "schedule.conf"
 
 FULLOFF = [DMX_MIN_SLOT_VALUE,DMX_MIN_SLOT_VALUE,DMX_MIN_SLOT_VALUE,DMX_MIN_SLOT_VALUE]
-FULLON = [DMX_MAX_SLOT_VALUE,DMX_MAX_SLOT_VALUE,DMX_MAX_SLOT_VALUE,DMX_MAX_SLOT_VALUE]
+FULLON = [DMX_MAX_SLOT_VALUE,DMX_MAX_SLOT_VALUE,DMX_MAX_SLOT_VALUE,DMX_MIN_SLOT_VALUE]
+BLUEON = [DMX_MIN_SLOT_VALUE,DMX_MAX_SLOT_VALUE,DMX_MIN_SLOT_VALUE,DMX_MIN_SLOT_VALUE]
+WHITEON = [DMX_MAX_SLOT_VALUE,DMX_MIN_SLOT_VALUE,DMX_MAX_SLOT_VALUE,DMX_MIN_SLOT_VALUE]
 
-# Convert HH:MM into seconds so far today
 def stringToSeconds(stuff):
   asTime = datetime.datetime.strptime("{}:00".format(stuff), "%H:%M:%S")
   return (asTime.hour * 3600) + (asTime.minute * 60) + asTime.second
 
-# Send data array (assumes channels are in numerical order starting at 1)
-def sendDMX(universe, data, client):
+def sendDMX():
   output = array('B')
-  for x in data:
+  for x in GLOBAL_SEND:
     output.append(x)
-  client.SendDmx(universe, output)
+  WRAPPER.Client().SendDmx(UNIVERSE, output)
   sys.stdout.flush()
+  WRAPPER.AddEvent(SEND_INTERVAL, sendDMX)
 
-# Save universe and current settings
-def saveData(sender):
-  pickle.dump([sender.getArgs()[0], sender.getArgs()[1]], open(DATASTORE, "wb"))
-    
-def calculate(sender, client):
-  # Get schedule from sender data attribute
-  loadedData = sender.getData()
-  lastMod = loadedData[0]
-  schedule = loadedData[1]
+def receiveData(data):
+  global LAST_COUNT
+  LAST_COUNT += 1
+  if LAST_COUNT >= SAVE_EVERY:
+    pickle.dump(GLOBAL_SEND, open(DATASTORE, "wb"))
+    LAST_COUNT = 0
 
-  # Reload schedule file if changed
+def calculate():
+  global GLOBAL_SEND
+  global GLOBAL_CONFIG
+  lastMod = GLOBAL_CONFIG[0]
+  schedule = GLOBAL_CONFIG[1]
   if lastMod < os.path.getmtime(SCHEDULE):
     print("Loading config from {}".format(SCHEDULE))
     with open(SCHEDULE, 'r') as schedule_file:
       schedule = json.load(schedule_file)
-      # Store new schedule in sender object data attribute
-      sender.setData([os.path.getmtime(SCHEDULE), schedule])
+      GLOBAL_CONFIG = ([os.path.getmtime(SCHEDULE), schedule])
 
   now = (datetime.datetime.now().hour * 3600) + (datetime.datetime.now().minute * 60) + datetime.datetime.now().second
-  liveSettings = sender.getArgs()
-  changed = False
   for channel in schedule['schedules']:
     prevKey = 0
     for key in sorted(channel['schedule']):
@@ -64,42 +64,30 @@ def calculate(sender, client):
         progress = (now - prevTime) / (keyTime - prevTime)
         difference =  nextSetting - prevSetting
         shouldBe = round(prevSetting + (difference * progress))
-        currently = liveSettings[1][int(channel['channel'])]
+        currently = GLOBAL_SEND[int(channel['channel'])]
         if currently > shouldBe:
-          liveSettings[1][int(channel['channel'])] = max(min(currently - 1, DMX_MAX_SLOT_VALUE), DMX_MIN_SLOT_VALUE)
-          changed = True
+          GLOBAL_SEND[int(channel['channel'])] = max(min(currently - 1, DMX_MAX_SLOT_VALUE), DMX_MIN_SLOT_VALUE)
+          print("Updating {} to {}".format(channel['channel'], GLOBAL_SEND[int(channel['channel'])]))
         elif currently < shouldBe:
-          liveSettings[1][int(channel['channel'])] = max(min(currently + 1, DMX_MAX_SLOT_VALUE), DMX_MIN_SLOT_VALUE)
-          changed = True
+          GLOBAL_SEND[int(channel['channel'])] = max(min(currently + 1, DMX_MAX_SLOT_VALUE), DMX_MIN_SLOT_VALUE)
+          print("Updating {} to {}".format(channel['channel'], GLOBAL_SEND[int(channel['channel'])]))
         break
       prevKey = key
-  if changed:
-    # Store new settings in sender object args attribute
-    sender.setArgs(liveSettings[0], liveSettings[1], client)
+  WRAPPER.AddEvent(CALC_INTERVAL, calculate)
     
 print("Starting...")
-# Defaults
-savedData = [UNIVERSE, FULLOFF]
-# Previous saved state
+GLOBAL_SEND = FULLOFF
 try:
-  savedData = pickle.load(open(DATASTORE, "rb"))
+  GLOBAL_SEND = pickle.load(open(DATASTORE, "rb"))
 except:
   pass
 
-# DMX client by OLA
-client = ClientWrapper().Client()
+GLOBAL_CONFIG = [0,0]
+WRAPPER = ClientWrapper()
 
-# Start threads
-sender = RepeatedTimer(SEND_INTERVAL, sendDMX, savedData[0], savedData[1], client)
-saver = RepeatedTimer(SAVE_INTERVAL, saveData, sender)
+WRAPPER.AddEvent(SEND_INTERVAL, sendDMX)
+WRAPPER.AddEvent(CALC_INTERVAL, calculate)
+WRAPPER.Client().RegisterUniverse(UNIVERSE, WRAPPER.Client().REGISTER, receiveData)
 
-# Loop forever
-try:
-  while True:
-    calculate(sender, client)
-    sleep(CALC_INTERVAL)
-finally:
-  saver.stop()
-  sender.stop()
-  print("... the end")
-
+# Kick it all off
+WRAPPER.Run()
