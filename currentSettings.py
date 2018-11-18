@@ -1,5 +1,12 @@
 #!/usr/bin/python
-import pickle
+import json
 
-data = pickle.load( open( "pickle.data", "rb" ) )
-print("{}".format(data))
+
+DATASTORE = '/etc/fishtimer/current.data'
+try:
+  with open(DATASTORE, "r") as f:
+    GLOBAL_SEND = json.load(f)
+    print("Happy data: {}".format(GLOBAL_SEND))
+except:
+  pass
+

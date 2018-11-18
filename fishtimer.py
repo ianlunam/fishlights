@@ -7,15 +7,15 @@ from ola.ClientWrapper import ClientWrapper
 from ola.DMXConstants import DMX_MIN_SLOT_VALUE, DMX_MAX_SLOT_VALUE, \
                              DMX_UNIVERSE_SIZE
 
-import sys, pickle, json, os, datetime
+import sys, json, os, datetime
 
 SEND_INTERVAL = 250
 SAVE_EVERY = 20
 LAST_COUNT = 0
 CALC_INTERVAL = 1000
 UNIVERSE = 1
-DATASTORE = "pickle.data"
-SCHEDULE = "schedule.conf"
+DATASTORE = "/etc/fishtimer/current.data"
+SCHEDULE = "/etc/fishtimer/schedule.conf"
 
 FULLOFF = [DMX_MIN_SLOT_VALUE,DMX_MIN_SLOT_VALUE,DMX_MIN_SLOT_VALUE,DMX_MIN_SLOT_VALUE]
 FULLON = [DMX_MAX_SLOT_VALUE,DMX_MAX_SLOT_VALUE,DMX_MAX_SLOT_VALUE,DMX_MIN_SLOT_VALUE]
@@ -38,7 +38,8 @@ def receiveData(data):
   global LAST_COUNT
   LAST_COUNT += 1
   if LAST_COUNT >= SAVE_EVERY:
-    pickle.dump(GLOBAL_SEND, open(DATASTORE, "wb"))
+    with open(DATASTORE, 'w') as outfile:
+      json.dump(GLOBAL_SEND, outfile)
     LAST_COUNT = 0
 
 def calculate():
@@ -78,7 +79,9 @@ def calculate():
 print("Starting...")
 GLOBAL_SEND = FULLOFF
 try:
-  GLOBAL_SEND = pickle.load(open(DATASTORE, "rb"))
+  with open(DATASTORE, "r") as f:
+    GLOBAL_SEND = json.load(f)
+    print("Happy data: {}".format(GLOBAL_SEND))
 except:
   pass
 

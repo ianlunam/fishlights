@@ -1,14 +1,14 @@
 [Unit]
 Description=Simplified python service
-After=syslog.target
+After=olad.service
 
 [Service]
 Type=simple
 Restart=always
-User=ian
-Group=ian
-WorkingDirectory=/home/ian/bin/
-ExecStart=/home/ian/bin/fishtimer.py
+User=www-data
+Group=www-data
+WorkingDirectory=/etc/fishtimer
+ExecStart=/usr/local/bin/fishtimer.py
 StandardOutput=syslog
 StandardError=syslog
 
